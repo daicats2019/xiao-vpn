@@ -1,74 +1,27 @@
-
-
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/adapters.dart';
-import 'package:xiao_vpn/purchase_page/purchase_v2_page.dart';
-import 'package:xiao_vpn/utils/locator/locator.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:xiao_vpn/presentation/bloc/app_cubit.dart';
+import 'package:xiao_vpn/presentation/root.dart';
 
-import 'Page/confrim_page.dart';
-import 'Page/history.dart';
-import 'Page/intro_page.dart';
-import 'Page/purchase.dart';
-import 'Page/seclect_location.dart';
-import 'Route/route_name.dart';
-import 'model/product.dart';
+import '/di/components/app_component.dart' as di;
+import 'core/cubit/cubit_observer.dart';
+import 'data/local/app_db.dart';
+import 'di/components/app_component.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
+  Bloc.observer = MainCubitObserver();
 
-  Hive.registerAdapter(ProductAdapter());
+  //Di
+  await di.configureDependencies();
 
-  await Hive.openBox<Product>('product');
+  //Hive
+  await AppDatabase().initialize();
 
-  await setupGetIt();
-
-  runApp(const MyApp());
+  runApp(
+    MultiBlocProvider(
+      providers: [BlocProvider<AppCubit>(create: (_) => getIt())],
+      child: RootPage(),
+    ),
+  );
 }
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: IntroPage(),
-      onGenerateRoute: (setting) {
-        switch (setting.name){
-          case RouteNamePage.inTroPAge:
-            {
-              return MaterialPageRoute(builder: (context) => IntroPage());
-            }
-          case RouteNamePage.confirmPage:
-            {
-              return MaterialPageRoute(builder: (context) => ConfirmPage());
-            }
-          case RouteNamePage.seclectLocation:
-            {
-              return MaterialPageRoute(builder: (context) => SeclectLocation());
-            }
-          case RouteNamePage.history:
-            {
-              return MaterialPageRoute(builder: (context) => HistoryPage());
-            }
-          case RouteNamePage.purchasePage:
-            {
-              return MaterialPageRoute(builder: (context) => PurchasePage());
-            }
-          case RouteNamePage.purchasePageV2:
-            {
-              return MaterialPageRoute(builder: (context) => PurchaseV2Page());
-            }
-        }
-      },
-    );
-  }
-}
-
